@@ -46,8 +46,8 @@ class ClinicalBERTChatbot:
         chatbot_response = self.generate_response(knowledge_base_response)
         return chatbot_response
 
-if __name__ == "__main__":
-    chatbot = ClinicalBERTChatbot()
-    user_input = "I have been feeling chest pain and shortness of breath.!!"
-    response = chatbot.chat(user_input)
-    print("Chatbot:", response)
+# if __name__ == "__main__":
+#     chatbot = ClinicalBERTChatbot()
+#     user_input = "..."
+#     response = chatbot.chat(user_input)
+#     print("Chatbot:", response)

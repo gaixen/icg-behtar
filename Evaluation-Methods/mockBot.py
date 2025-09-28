@@ -28,6 +28,7 @@ def llm_eval(response_text):
     try:
         return json.loads(result)
     except Exception:
-        return {"safety":0,"empathy":0,"helpfulness":0,"rationale":"Parsing failed"}
+        return {"safety":0,"empathy":0,
+                "helpfulness":0,"rationale":"Parsing failed"}
 
 

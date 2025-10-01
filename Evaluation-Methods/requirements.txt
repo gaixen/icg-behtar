@@ -5,3 +5,9 @@ langchain-google-genai
 langchain-tavily
 google-generativeai
 python-dotenv
+sqlalchemy 
+psycopg2-binary 
+sentence-transformers 
+scikit-learn 
+numpy 
+pandas 

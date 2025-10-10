@@ -11,3 +11,25 @@ sentence-transformers
 scikit-learn 
 numpy 
 pandas 
+scipy
+librosa
+sounddevice
+soundfile
+pydub
+phonemizer
+websockets
+aiohttp
+asyncio
+# webrtcvad
+transformers 
+g2p-en
+# espeak-ng
+hifi-gan
+sounddevice
+openai-whisper
+datasets
+vosk
+praat-parselmouth
+pyAudioAnalysis
+speechbrain
+pyworld

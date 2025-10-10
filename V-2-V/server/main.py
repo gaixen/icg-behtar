@@ -30,7 +30,6 @@ async def handle_connection(websocket):
 async def main():
     async with websockets.serve(handle_connection, "0.0.0.0", 8765, max_size=2**24):
         print("server running on ws://0.0.0.0:8765")
-        await asyncio.Future()  # run forever
-
+        await asyncio.Future()
 if __name__ == "__main__":
     asyncio.run(main())

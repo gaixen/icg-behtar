@@ -1,6 +1,3 @@
-# Replacement for Coqui YourTTS.
-# Uses Suno Bark model (Hugging Face) for emotion-rich speech synthesis.
-# Accepts <emotion:...> markup and optional phonemes (ignored by Bark but keeps format).
 import torch
 import numpy as np
 import soundfile as sf
@@ -9,6 +6,7 @@ from transformers import AutoProcessor, BarkModel
 import re
 
 class EmotionTTS:
+
     def __init__(self, model_name="suno/bark-small", device=None):
         print(f"Loading Bark model: {model_name}")
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -16,12 +14,10 @@ class EmotionTTS:
         self.model = BarkModel.from_pretrained(model_name).to(self.device)
 
     def _parse_emotion(self, markup_text: str):
-        # import re
         emotion = "neutral"
         match = re.search(r"<emotion:([a-zA-Z]+)>", markup_text)
         if match:
             emotion = match.group(1)
-        # Remove tags for model input
         text = re.sub(r"<[^>]+>", "", markup_text).strip()
         return text, emotion
 
@@ -49,9 +45,8 @@ class EmotionTTS:
         buffer.seek(0)
         return buffer.read()
 
-
 tts = EmotionTTS()
-audio_bytes = tts.synthesize("<emotion:happy> Hello, how are you today?")
-with open("test_bark.wav", "wb") as f:
+audio_bytes = tts.synthesize("<emotion:sad> Hello, how are you today?")
+with open("test_bark_sad.wav", "wb") as f:
     f.write(audio_bytes)
 print("Saved test_bark.wav")

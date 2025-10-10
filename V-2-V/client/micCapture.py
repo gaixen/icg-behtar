@@ -70,12 +70,11 @@ class MIC:
 if __name__ == "__main__":
     mic = MIC()
     mic.start()
-    print("Recording... Press Ctrl+C to stop.")
     try:
         while True:
             chunk = mic.get_chunk()
-            if chunk:
-                print(f"Captured {len(chunk)} bytes")
+            if chunk is not None:
+                print(f"{len(chunk)} bytes captured!!")
     except KeyboardInterrupt:
         mic.stop()
         print("Stopped.")

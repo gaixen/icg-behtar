@@ -28,6 +28,7 @@ hifi-gan
 sounddevice
 openai-whisper
 datasets
+soundfile
 vosk
 praat-parselmouth
 pyAudioAnalysis

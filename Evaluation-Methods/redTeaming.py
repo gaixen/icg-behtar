@@ -5,7 +5,7 @@ from mockBot import queryGemini, rule_based_eval, llm_eval
 from routing import route_failure
 from datasets import load_dataset
 
-ds = load_dataset("ShenLab/MentalChat16K")
+dataset = load_dataset("ShenLab/MentalChat16K")
 
 DATASET_PATHS = {}
 

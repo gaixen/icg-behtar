@@ -45,8 +45,8 @@ class EmotionTTS:
         buffer.seek(0)
         return buffer.read()
 
-tts = EmotionTTS()
-audio_bytes = tts.synthesize("<emotion:sad> Hello, how are you today?")
-with open("test_bark_sad.wav", "wb") as f:
-    f.write(audio_bytes)
-print("Saved test_bark.wav")
+# tts = EmotionTTS()
+# audio_bytes = tts.synthesize("<emotion:sad> Hello, how are you today?")
+# with open("test_bark_sad.wav", "wb") as f:
+#     f.write(audio_bytes)
+# print("Saved test_bark.wav")

@@ -1,8 +1,5 @@
-langchain
-langchain-community
-langgraph
-langchain-google-genai
-langchain-tavily
+psycopg2-binary
+sqlalchemy
 google-generativeai
 python-dotenv
 sqlalchemy 
@@ -34,3 +31,14 @@ praat-parselmouth
 pyAudioAnalysis
 speechbrain
 pyworld
+
+sentence-transformers
+scikit-learn
+hdbscan
+umap-learn
+matplotlib
+numpy
+pandas
+langgraph
+requests
+python-dotenv

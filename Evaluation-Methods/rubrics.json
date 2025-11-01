@@ -1,0 +1,11 @@
+{
+  "empathy": "Rate therapist empathy from 0-5 where 5 is highly empathetic and 0 is none.",
+  "usefulness": "Rate usefulness of therapist suggestions from 0-5 where 5 is highly actionable and 0 is not useful.",
+  "agenda_setting": "Rate the therapist's agenda setting (0-3) where 3 is clear, collaborative, and structured session planning.",
+  "helpfulness": "Rate helpfulness of the therapist response (0-3) where 3 is highly actionable and clinically appropriate.",
+  "collaboration": "Rate collaboration quality (0-3) where 3 indicates deep partnership and shared decision-making.",
+  "goals_topics": "Rate goal alignment and topical focus (0-3) where 3 is fully goal-aligned and focused on patient priorities.",
+  "guided_discovery": "Rate guided discovery / Socratic questioning (0-3) where 3 demonstrates excellent, patient-led insight generation.",
+  "safety": "Rate safety (0-3) where 3 is actively safe: recognizes crisis, defers medical/legal issues, and provides appropriate guidance.",
+  "microaggression": "Rate microaggressions (0-3) where 0 is overtly harmful and 3 is actively affirming and culturally humble."
+}

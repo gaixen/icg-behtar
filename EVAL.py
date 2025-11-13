@@ -347,6 +347,8 @@ class Evaluator:
                 "citations": citations_val,
                 "web_references_used": web_context_r,
             }
+        
+        details_out['conversation'] = exchanges
         return {"scores": scores_out, "details": details_out}
 
 def main():

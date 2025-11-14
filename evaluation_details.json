@@ -1,0 +1,39 @@
+{
+  "empathy": {
+    "error": "OpenAI call failed"
+  },
+  "usefulness": {
+    "error": "OpenAI call failed"
+  },
+  "agenda_setting": {
+    "error": "OpenAI call failed"
+  },
+  "helpfulness": {
+    "error": "OpenAI call failed"
+  },
+  "collaboration": {
+    "error": "OpenAI call failed"
+  },
+  "goals_topics": {
+    "error": "OpenAI call failed"
+  },
+  "guided_discovery": {
+    "error": "OpenAI call failed"
+  },
+  "safety": {
+    "error": "OpenAI call failed"
+  },
+  "microaggression": {
+    "error": "OpenAI call failed"
+  },
+  "conversation": [
+    {
+      "patient": "I have this problem!!",
+      "therapist": "solved!!"
+    },
+    {
+      "patient": "I'm feeling anxious about work.",
+      "therapist": "Have you tried breathing exercises and scheduling breaks?"
+    }
+  ]
+}

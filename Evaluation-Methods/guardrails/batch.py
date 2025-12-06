@@ -1,7 +1,20 @@
 import asyncio
-from typing import AsyncGenerator, Awaitable, Callable, Generic, List, Optional, TypeVar
+from typing import (
+    AsyncGenerator, 
+    Awaitable, 
+    Callable, 
+    Generic, 
+    List, 
+    Optional, 
+    TypeVar, 
+    Any
+)
 
-from .base import BaseDetector, Extra, ExtrasImport
+from .base import (
+    BaseDetector, 
+    Extra, 
+    ExtrasImport
+)
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -233,7 +246,9 @@ class PromptInjectionAnalyzer(BatchedDetector):
         # preloads the model
         await self.adetect("Testing")
 
-    def _load_model(self, model):
+    def _load_model(self, 
+                    model
+    ):
         pipeline = transformers_extra.package("transformers").import_names("pipeline")
         self.pipe_store[model] = pipeline("text-classification", model=model, top_k=None)
 
@@ -244,7 +259,10 @@ class PromptInjectionAnalyzer(BatchedDetector):
         return model in self.pipe_store
 
     async def adetect_all_batch(
-        self, texts: list[str], model: str = DEFAULT_PROMPT_INJECTION_MODEL, threshold: float = 0.9
+        self, 
+        texts: list[str], 
+        model: str = DEFAULT_PROMPT_INJECTION_MODEL, 
+        threshold: float = 0.9
     ) -> bool:
         """Detects whether text contains prompt injection.
 
@@ -272,6 +290,11 @@ class PromptInjectionAnalyzer(BatchedDetector):
             for i in range(len(scores))
         ]
 
-    async def adetect(self, text, *args, **kwargs):
+    async def adetect(
+        self, 
+        text, 
+        *args, 
+        **kwargs
+    ) -> Any:
         result = await self.adetect_all(text, *args, **kwargs)
         return result[0] is True

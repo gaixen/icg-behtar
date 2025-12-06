@@ -17,11 +17,9 @@ from re import Pattern
 import unicodedata
 from typing import Generic, TypeVar, Callable, Awaitable, List, Generic, Optional, Any
 import nh3
-# from detect_secrets.core import scan
-# from detect_secrets.core.secrets_collection import SecretsCollection
 import ipaddress
 import socket
-from backend.pipeline.logger import custom_logger
+from ..logger import custom_logger
 
 from .base import DetectorResult, BaseDetector, ExtrasImport, Extra
 from .batch import PromptInjectionAnalyzer, PRESIDIO_EXTRA, transformers_extra
@@ -57,12 +55,19 @@ def get_openai_client() -> AsyncClient:
 Extra.extras = {}
 
 class PII_Analyzer(BaseDetector):
-    def __init__(self, threshold=0.5):
+    def __init__(
+        self, 
+        threshold=0.5
+    ):
         AnalyzerEngine = PRESIDIO_EXTRA.package("presidio_analyzer").import_names("AnalyzerEngine")
         self.analyzer = AnalyzerEngine()
         self.threshold = threshold
 
-    def detect_all(self, text: str, entities: list[str] | None = None):
+    def detect_all(
+        self, 
+        text: str, 
+        entities: list[str] | None = None
+    ):
         results = self.analyzer.analyze(text, language="en", entities=entities)
         res_matches = set()
         for res in results:
@@ -70,7 +75,11 @@ class PII_Analyzer(BaseDetector):
                 res_matches.add(res)
         return list(res_matches)
 
-    async def adetect(self, text: str, entities: list[str] | None = None):
+    async def adetect(
+        self, 
+        text: str, 
+        entities: list[str] | None = None
+    ):
         return self.detect_all(text, entities)
     
 class UnicodeDetector(BaseDetector):
@@ -116,6 +125,19 @@ SECRETS_PATTERNS = {
         re.compile(r'xox(?:a|b|p|o|s|r)-(?:\d+-)+[a-z0-9]+', flags=re.IGNORECASE),
         re.compile(r'https://hooks\.slack\.com/services/T[a-zA-Z0-9_]+/B[a-zA-Z0-9_]+/[a-zA-Z0-9_]+', flags=re.IGNORECASE | re.VERBOSE),
     ],
+    "GOOGLE_API_KEY": [
+        re.compile(r'\bAIza[0-9A-Za-z\-_]{35}\b'),            
+        re.compile(r'\bya29\.[0-9A-Za-z\-_\.]{40,}\b'),   
+    ],
+    "GEMINI_aPI_KEY": [
+        re.compile(r'\bAIza[0-9A-Za-z\-_]{35}\b'),
+        re.compile(r'\bya29\.[0-9A-Za-z\-_\.]{40,}\b'),
+        re.compile(r'\bgemini-[A-Za-z0-9_\-]{20,120}\b', flags=re.IGNORECASE),
+    ],
+    "OPENAI_API_KEY": [
+        re.compile(r'\bsk-(?:live|test|proj)-[A-Za-z0-9_\-]{24,120}\b'),
+        re.compile(r'\bsk-[A-Za-z0-9_\-]{24,120}\b'),
+    ]
 }
 
 @dataclass
@@ -162,8 +184,6 @@ class MCPSecurityGateway:
         self.allowed_domains = {
             # TODO: Add more domains as needed
         }
-        logging.basicConfig(level=logging.INFO)
-        self.logger = logging.getLogger("MCP_Security")
         self.pii_analyzer = PII_Analyzer()
         self.secrets_analyzer = SecretsAnalyzer()
         self.prompt_injection_analyzer = PromptInjectionAnalyzer()
@@ -177,13 +197,16 @@ class MCPSecurityGateway:
         pii_results = self.pii_analyzer.detect_all(text)
         if pii_results:
             issues.append(f"PII detected: {[res.entity for res in pii_results]}")
+            custom_logger.critical("Security Alert: PII detected")
 
         secrets_results = self.secrets_analyzer.detect_all(text)
         if secrets_results:
             issues.append(f"Secrets detected: {[res.entity for res in secrets_results]}")
-
+            custom_logger.critical("Security Alert: Secrets detected")
+            
         if await self.prompt_injection_analyzer.adetect(text):
             issues.append("Prompt injection detected")
+            custom_logger.critical("Security Alert: Prompt injection detected")
             
         unicode_results = self.unicode_detector.detect_all(text, categories=["Co", "Cs"])
         if unicode_results:
@@ -243,7 +266,7 @@ class MCPSecurityGateway:
                                         if t > current_time - self.RATE_LIMIT_WINDOW]
 
         if len(self.request_counts[user_id]) >= self.MAX_REQUESTS_PER_MINUTE:
-            self.logger.warning(f"Rate limit exceeded for user {user_id}")
+            custom_logger.warning(f"Rate limit exceeded for user {user_id}")
             # TODO: "Dead Letter Queue" or HITL
             return False
         
@@ -257,17 +280,17 @@ class MCPSecurityGateway:
             endpoint: str
     ) -> bool:
         """PoLP & Prevent Broken Function Level Architecture"""
-        self.logger.info(f"PoLP Check: Role '{agent_role}' attempting {method} on {endpoint}")
+        custom_logger.info(f"PoLP Check: Role '{agent_role}' attempting {method} on {endpoint}")
         # Check if role exists
         if agent_role not in self.role_permissions:
-            self.logger.error(f"Security Alert: Unknown agent role {agent_role}")
+            custom_logger.error(f"Security Alert: Unknown agent role {agent_role}")
             return False
 
         allowed_endpoints = self.role_permissions[agent_role].get(method, [])
         is_allowed = any(pattern.match(endpoint) for pattern in allowed_endpoints)
         
         if not is_allowed:
-            self.logger.warning(f"PoLP Violation: {agent_role} tried {method} on {endpoint}")
+            custom_logger.warning(f"PoLP Violation: {agent_role} tried {method} on {endpoint}")
             return False
         return True
 
@@ -277,13 +300,13 @@ class MCPSecurityGateway:
             resource_id: str
     ) -> bool:
         """Prevent Broken Object Level Architecture (BOLA)"""
-        self.logger.info(f"BOLA Check: User '{user_id}' accessing resource '{resource_id}'")
+        custom_logger.info(f"BOLA Check: User '{user_id}' accessing resource '{resource_id}'")
         user_data = MOCK_USER_DB.get(user_id)
         
         if not user_data:
             return False
         if resource_id not in user_data["allowed_resources"]:
-            self.logger.critical(f"BOLA ATTACK: User {user_id} tried to access {resource_id}")
+            custom_logger.critical(f"BOLA ATTACK: User {user_id} tried to access {resource_id}")
             return False
         
         return True
@@ -303,27 +326,28 @@ class MCPSecurityGateway:
             domain = parsed.netloc
             
             if parsed.scheme != "https":
-                self.logger.warning(f"Unsafe Protocol detected: {url}")
+                custom_logger.warning(f"Unsafe Protocol detected: {url}")
                 return False
 
             # Check against allowed domains
             if not any(domain.endswith(allowed) for allowed in self.allowed_domains):
-                self.logger.warning(f"SSRF Prevention: Blocked connection to {domain}")
+                custom_logger.warning(f"SSRF Prevention: Blocked connection to {domain}")
                 return False
             
             # Prevent requests to internal IP addresses
             ip = socket.gethostbyname(domain)
             ip_addr = ipaddress.ip_address(ip)
             if ip_addr.is_private or ip_addr.is_loopback:
-                self.logger.warning(f"SSRF Prevention: Blocked connection to internal IP {domain}")
+                custom_logger.warning(f"SSRF Prevention: Blocked connection to internal IP {domain}")
                 return False
                 
             return True
         except socket.gaierror:
-            self.logger.warning(f"SSRF Prevention: Could not resolve domain {domain}")
+            custom_logger.warning(f"SSRF Prevention: Could not resolve domain {domain}")
+            custom_logger.warning(f"SSRF Prevention: Could not resolve domain {domain}")
             return False
         except Exception as e:
-            self.logger.error(f"Error validating URL: {e}")
+            custom_logger.error(f"Error validating URL: {e}")
             return False
 
     def sanitize_output(
@@ -358,7 +382,7 @@ class MCPSecurityGateway:
         for pattern, replacement in patterns.items():
             masked_message = re.sub(pattern, replacement, masked_message)
             
-        self.logger.info(masked_message)
+        custom_logger.info(masked_message)
         
     def verify_tool_signature(
             self, 
@@ -378,7 +402,7 @@ class MCPSecurityGateway:
         if hmac.compare_digest(expected_signature, provided_signature):
             return True
         else:
-            self.logger.critical("SECURITY BREACH: Tool signature verification failed!")
+            custom_logger.critical("SECURITY BREACH: Tool signature verification failed!")
             return False
 
     
@@ -390,11 +414,11 @@ class MCPSecurityGateway:
         """
         session ephemerality: wipes the agent's memory after the task is done.
         """
-        self.logger.info(f"Initiating memory wipe for Session: {session_id}")
+        custom_logger.info(f"Initiating memory wipe for Session: {session_id}")
         
         new_session_id = hashlib.sha256(f"{session_id}{time.time()}".encode()).hexdigest()
         
-        self.logger.info(f"Context flushed. Rotated to new Session ID: {new_session_id}")
+        custom_logger.info(f"Context flushed. Rotated to new Session ID: {new_session_id}")
         return new_session_id
 
     def trigger_hitl_review(self, user_id: str, action: str, reason: str):
@@ -409,9 +433,10 @@ class MCPSecurityGateway:
             "timestamp": time.time()
         }
         # TODO: push this dict to an SQS Queue or a Slack Webhook
-        self.logger.warning(f"HITL TRIGGERED: {alert}")
+        custom_logger.warning(f"HITL TRIGGERED: {alert}")
         return {"status": 202, "message": "Request queued for manual security review."}
 
+    ## TODO: this method is quite fishy. Fix this.
     async def execute_secure_request(
             self, 
             user_id: str, 
@@ -486,10 +511,10 @@ class MCPSecurityGateway:
             return result
             
         except requests.HTTPError as e:
-            self.logger.error(f"HTTP Error: {e}")
+            custom_logger.error(f"HTTP Error: {e}")
             return {"error": f"Upstream service returned status {e.response.status_code}"}
         except requests.RequestException as e:
-            self.logger.error(f"Request Exception: {e}")
+            custom_logger.error(f"Request Exception: {e}")
             return {"error": "Upstream service failure"}
 
 

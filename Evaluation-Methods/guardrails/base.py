@@ -14,7 +14,10 @@ class DetectorResult:
 class BaseDetector:
     """Base class for detectors."""
 
-    def get_entities(self, results: list[DetectorResult]) -> list[str]:
+    def get_entities(
+        self, 
+        results: list[DetectorResult]
+    ) -> list[str]:
         """Returns a list of entities from a list of DetectorResult objects.
 
         Args:
@@ -24,7 +27,12 @@ class BaseDetector:
         """
         return [result.entity for result in results]
 
-    def detect_all(self, text: str, *args, **kwargs) -> list[DetectorResult]:
+    def detect_all(
+        self, 
+        text: str, 
+        *args, 
+        **kwargs
+    ) -> list[DetectorResult]:
         """Performs detection on the given text and returns a list of DetectorResult objects.
 
         Args:
@@ -34,7 +42,12 @@ class BaseDetector:
         """
         raise NotImplementedError("")
 
-    def detect(self, text: str, *args, **kwargs) -> bool:
+    def detect(
+        self, 
+        text: str, 
+        *args, 
+        **kwargs
+    ) -> bool:
         """Performs detection on the given text and returns a boolean indicating whether there has been any detection.
 
         Args:
@@ -56,7 +69,12 @@ class BaseDetector:
 
 class ExtrasImport:
     
-    def __init__(self, import_name, package_name, version_constraint):
+    def __init__(
+        self, 
+        import_name, 
+        package_name, 
+        version_constraint
+    ) -> None:
         """Creates a new ExtrasImport object.
 
         Args:
@@ -72,7 +90,10 @@ class ExtrasImport:
         # (only available if find_all is used)
         self.sites = []
 
-    def import_names(self, *specifiers):
+    def import_names(
+        self, 
+        *specifiers
+    ):
         
         module = self.import_module()
         elements = [getattr(module, specifier) for specifier in specifiers]
@@ -103,7 +124,12 @@ class Extra:
     For a list of available extras, see `Extra.find_all()` and below.
     """
 
-    def __init__(self, name, description, packages):
+    def __init__(
+        self, 
+        name, 
+        description, 
+        packages
+    ):
         self.name = name
         self.description = description
         self.packages = packages

@@ -2,7 +2,6 @@ from .base import (
     BaseDetector, 
     Extra, 
     ExtrasImport,
-    BaseDetector,
 )
 from .batch import (
     PromptInjectionAnalyzer, 

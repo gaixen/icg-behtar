@@ -1,6 +1,7 @@
 import csv
 import json
 import logging
+
 import requests
 from db import DatabaseHandler
 from settings import settings
@@ -8,21 +9,22 @@ from settings import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class PromptIngestor:
     def __init__(self, db_handler: DatabaseHandler):
         self.db_handler = db_handler
 
     def ingest_from_file(self, file_path, source):
-        if file_path.endswith('.csv'):
-            with open(file_path, 'r') as f:
+        if file_path.endswith(".csv"):
+            with open(file_path, "r") as f:
                 reader = csv.reader(f)
                 for row in reader:
                     self.db_handler.insert_prompt(source, row[0])
-        elif file_path.endswith('.json'):
-            with open(file_path, 'r') as f:
+        elif file_path.endswith(".json"):
+            with open(file_path, "r") as f:
                 data = json.load(f)
                 for item in data:
-                    self.db_handler.insert_prompt(source, item['prompt'])
+                    self.db_handler.insert_prompt(source, item["prompt"])
         logger.info(f"Ingested prompts from {file_path}")
 
     def fetch_web_context(self, query):

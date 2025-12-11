@@ -1,10 +1,11 @@
+import json
+import os
+import subprocess
+import sys
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import subprocess
-import json
-import os
-import sys
 
 app = FastAPI()
 
@@ -17,9 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class EvaluationRequest(BaseModel):
     chats: list
     rubric: dict
+
 
 @app.post("/evaluate")
 async def evaluate(request: EvaluationRequest):
@@ -33,17 +36,17 @@ async def evaluate(request: EvaluationRequest):
         rubric_file = os.path.join(base_dir, "rubrics_temp.json")
         output_file = os.path.join(base_dir, "evaluation_output.json")
         details_file = os.path.join(base_dir, "evaluation_details.json")
-        
+
         # Write input files
-        with open(chats_file, 'w') as f:
+        with open(chats_file, "w") as f:
             json.dump({"conversation": request.chats}, f)
-        
-        with open(rubric_file, 'w') as f:
+
+        with open(rubric_file, "w") as f:
             json.dump(request.rubric, f)
-        
+
         # Get the path to EVAL.py (adjust based on your repo structure)
         eval_script = r"C:\Users\Varun Agrawal\Downloads\demo\Varun-behtar\EVAL.py"
-        
+
         # Run EVAL.py
         cmd = [
             sys.executable,
@@ -54,18 +57,20 @@ async def evaluate(request: EvaluationRequest):
             "--fast",
             f"--output={output_file}",
             f"--details-file={details_file}",
-            "--model=gpt-3.5-turbo"
+            "--model=gpt-3.5-turbo",
         ]
-        
+
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        
+
         if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=f"Evaluation failed: {result.stderr}")
-        
+            raise HTTPException(
+                status_code=500, detail=f"Evaluation failed: {result.stderr}"
+            )
+
         # Read results
         evaluation_details = None
         if os.path.exists(details_file):
-            with open(details_file, 'r', encoding='utf-8') as f:
+            with open(details_file, "r", encoding="utf-8") as f:
                 evaluation_details = json.load(f)
 
         # Ensure the main output JSON also contains the original input conversation
@@ -73,13 +78,13 @@ async def evaluate(request: EvaluationRequest):
         out_data = {}
         if os.path.exists(output_file):
             try:
-                with open(output_file, 'r', encoding='utf-8') as fo:
+                with open(output_file, "r", encoding="utf-8") as fo:
                     out_data = json.load(fo)
             except Exception:
                 out_data = {}
         # Add the original chats under `input` (preserve existing keys)
-        out_data['input'] = { 'conversation': request.chats }
-        with open(output_file, 'w', encoding='utf-8') as fo:
+        out_data["input"] = {"conversation": request.chats}
+        with open(output_file, "w", encoding="utf-8") as fo:
             json.dump(out_data, fo, indent=2)
 
         # Clean up only the temporary input files, keep output files for inspection
@@ -93,18 +98,21 @@ async def evaluate(request: EvaluationRequest):
         return {
             "details": evaluation_details,
             "output_file": output_file,
-            "status": "success"
+            "status": "success",
         }
-    
+
     except subprocess.TimeoutExpired:
         raise HTTPException(status_code=500, detail="Evaluation timeout")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

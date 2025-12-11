@@ -32,7 +32,7 @@ const ScoreVisualizer = ({ score, maxScore }: { score: number; maxScore: number 
 
     return (
         <div className="w-full bg-stone-200 rounded-full h-2.5 my-2 overflow-hidden">
-            <motion.div 
+            <motion.div
                 className={`${colorClass} h-2.5 rounded-full`}
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
@@ -47,9 +47,9 @@ const MetricCard = ({ metricKey, data, index }: { metricKey: string; data: any; 
     if (!definition) return null;
 
     const score = getScore(data.parsed);
-    
+
     return (
-        <motion.div 
+        <motion.div
             className="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-3 hover:shadow-lg hover:border-emerald-300 transition-all cursor-pointer"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -61,7 +61,7 @@ const MetricCard = ({ metricKey, data, index }: { metricKey: string; data: any; 
                     <h3 className="text-lg font-bold text-emerald-900">{definition.title}</h3>
                     <p className="text-sm text-stone-500 italic">{definition.description}</p>
                 </div>
-                <motion.div 
+                <motion.div
                     className="text-2xl font-bold text-emerald-800 bg-emerald-100 rounded-lg px-3 py-1 whitespace-nowrap"
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
@@ -121,14 +121,14 @@ export default function EvaluationPage() {
     <div className="min-h-screen bg-stone-50 font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.header 
+        <motion.header
           className="flex justify-between items-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-4xl font-bold text-emerald-900">Session Evaluation</h1>
-          <button 
+          <button
             onClick={() => router.push('/home')}
             className="flex items-center gap-2 bg-white border border-stone-200 text-emerald-800 font-semibold py-2 px-4 rounded-lg hover:bg-stone-100 hover:border-emerald-400 transition-all shadow-sm hover:shadow-md"
           >
@@ -140,10 +140,10 @@ export default function EvaluationPage() {
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {metricKeys.map((key, index) => (
-            evaluationData.details[key] && 
-            <MetricCard 
-              key={key} 
-              metricKey={key} 
+            evaluationData.details[key] &&
+            <MetricCard
+              key={key}
+              metricKey={key}
               data={evaluationData.details[key]}
               index={index}
             />

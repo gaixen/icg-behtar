@@ -1,8 +1,10 @@
-import sounddevice as sd
-import threading
 import queue
+import threading
+
 import numpy as np
+import sounddevice as sd
 from micCapture import MIC
+
 
 class AudioPlayback:
     def __init__(self, sample_rate=16000):
@@ -26,7 +28,7 @@ class AudioPlayback:
         self._stream = sd.OutputStream(
             samplerate=self.sample_rate,
             channels=1,
-            dtype='float32',
+            dtype="float32",
             callback=self._callback,
         )
         self._thread = threading.Thread(target=self._run, daemon=True)

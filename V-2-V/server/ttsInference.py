@@ -1,12 +1,13 @@
-import torch
-import numpy as np
-import soundfile as sf
 import io
-from transformers import AutoProcessor, BarkModel
 import re
 
-class EmotionTTS:
+import numpy as np
+import soundfile as sf
+import torch
+from transformers import AutoProcessor, BarkModel
 
+
+class EmotionTTS:
     def __init__(self, model_name="suno/bark-small", device=None):
         print(f"Loading Bark model: {model_name}")
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -34,16 +35,19 @@ class EmotionTTS:
         }
         voice_preset = emotion_map.get(emotion, "v2/en_speaker_1")
 
-        inputs = self.processor(text, voice_preset=voice_preset, return_tensors="pt").to(self.device)
+        inputs = self.processor(
+            text, voice_preset=voice_preset, return_tensors="pt"
+        ).to(self.device)
         with torch.no_grad():
             audio_array = self.model.generate(**inputs)
         audio_array = audio_array.cpu().numpy().squeeze()
 
         # Convert float32 audio to WAV bytes
         buffer = io.BytesIO()
-        sf.write(buffer, audio_array, 24000, format='WAV')
+        sf.write(buffer, audio_array, 24000, format="WAV")
         buffer.seek(0)
         return buffer.read()
+
 
 # tts = EmotionTTS()
 # audio_bytes = tts.synthesize("<emotion:sad> Hello, how are you today?")

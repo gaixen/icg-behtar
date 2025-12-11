@@ -132,7 +132,7 @@ export default function Home() {
           >
             <h2 className="text-2xl font-bold text-emerald-900 mb-4">Upload Transcript</h2>
             <p className="text-stone-600 mb-4">
-              Upload a JSON file containing the therapy session transcript with conversations between therapist and patient. 
+              Upload a JSON file containing the therapy session transcript with conversations between therapist and patient.
               The system will evaluate the session based on multiple clinical dimensions.
             </p>
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">

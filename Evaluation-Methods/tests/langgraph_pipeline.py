@@ -1,16 +1,19 @@
 import logging
+
 from db import DatabaseHandler
-from evaluator import RuleEvaluator, LLMJudge
+from evaluator import LLMJudge, RuleEvaluator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 try:
     from langgraph.graph import StateGraph
+
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("langgraph not found. Using fallback GraphRouter.")
+
 
 class GraphRouter:
     def __init__(self, db_handler: DatabaseHandler):
@@ -41,37 +44,51 @@ class GraphRouter:
                 break
         return state
 
+
 class InputNode:
     def run(self, state):
         logger.debug("Running InputNode")
         return state
 
+
 class RuleEvalNode:
     def __init__(self):
         self.evaluator = RuleEvaluator()
+
     def run(self, state):
         logger.debug("Running RuleEvalNode")
         eval_results = self.evaluator.evaluate(state["response_text"])
         state.update(eval_results)
         return state
 
+
 class LLMEvalNode:
     def __init__(self, bot_api):
         self.evaluator = LLMJudge(bot_api)
+
     def run(self, state):
         logger.debug("Running LLMEvalNode")
-        eval_results = self.evaluator.evaluate(state["prompt_text"], state["response_text"])
+        eval_results = self.evaluator.evaluate(
+            state["prompt_text"], state["response_text"]
+        )
         state.update(eval_results)
         return state
+
 
 class SafetyGuardrailNode:
     def __init__(self, db_handler: DatabaseHandler):
         self.db_handler = db_handler
+
     def run(self, state):
-        logger.warning(f"Routing to SafetyGuardrailNode for response {state['response_id']}")
-        self.db_handler.insert_failure(state["response_id"], "safety_guardrail", "Crisis detected")
+        logger.warning(
+            f"Routing to SafetyGuardrailNode for response {state['response_id']}"
+        )
+        self.db_handler.insert_failure(
+            state["response_id"], "safety_guardrail", "Crisis detected"
+        )
         state["response_text"] = "I am a helpful and harmless AI assistant."
         return state
+
 
 class PersonaUpdateNode:
     def run(self, state):
@@ -79,24 +96,35 @@ class PersonaUpdateNode:
         state["system_prompt"] = "New system prompt based on evaluation."
         return state
 
+
 class PromptPatchNode:
     def run(self, state):
         logger.debug("Running PromptPatchNode")
         state["patched_instruction"] = "Patched instruction."
         return state
 
+
 class ClinicianReviewNode:
     def __init__(self, db_handler: DatabaseHandler):
         self.db_handler = db_handler
+
     def run(self, state):
-        logger.warning(f"Routing to ClinicianReviewNode for response {state['response_id']}")
-        self.db_handler.insert_failure(state["response_id"], "clinician_review", "LLM evaluation failed safety check")
+        logger.warning(
+            f"Routing to ClinicianReviewNode for response {state['response_id']}"
+        )
+        self.db_handler.insert_failure(
+            state["response_id"],
+            "clinician_review",
+            "LLM evaluation failed safety check",
+        )
         return state
+
 
 class OutputNode:
     def run(self, state):
         logger.debug("Running OutputNode")
         return state
+
 
 class LangGraphRouter:
     def __init__(self, db_handler, bot_api):
@@ -121,17 +149,21 @@ class LangGraphRouter:
         workflow.add_edge("input", "rule_eval")
         workflow.add_conditional_edges(
             "rule_eval",
-            lambda state: "safety_guardrail" if state.get("crisis_detected") else "llm_eval",
-            {"safety_guardrail": "output", "llm_eval": "llm_eval"}
+            lambda state: "safety_guardrail"
+            if state.get("crisis_detected")
+            else "llm_eval",
+            {"safety_guardrail": "output", "llm_eval": "llm_eval"},
         )
         workflow.add_conditional_edges(
             "llm_eval",
-            lambda state: "clinician_review" if state.get("safety_score") == 0 else "persona_update",
-            {"clinician_review": "output", "persona_update": "prompt_patch"}
+            lambda state: "clinician_review"
+            if state.get("safety_score") == 0
+            else "persona_update",
+            {"clinician_review": "output", "persona_update": "prompt_patch"},
         )
         workflow.add_edge("prompt_patch", "output")
         workflow.add_edge("persona_update", "prompt_patch")
-        
+
         return workflow.compile()
 
     def _build_fallback_graph(self, bot_api):
@@ -145,9 +177,23 @@ class LangGraphRouter:
         router.add_node("clinician_review", ClinicianReviewNode(self.db_handler))
         router.add_node("output", OutputNode())
 
-        router.add_conditional_edge("rule_eval", lambda state: "safety_guardrail" if state.get("crisis_detected") else "llm_eval", {"safety_guardrail": "output", "llm_eval": "llm_eval"})
-        router.add_conditional_edge("llm_eval", lambda state: "clinician_review" if state.get("safety_score") == 0 else "persona_update", {"clinician_review": "output", "persona_update": "prompt_patch"})
+        router.add_conditional_edge(
+            "rule_eval",
+            lambda state: "safety_guardrail"
+            if state.get("crisis_detected")
+            else "llm_eval",
+            {"safety_guardrail": "output", "llm_eval": "llm_eval"},
+        )
+        router.add_conditional_edge(
+            "llm_eval",
+            lambda state: "clinician_review"
+            if state.get("safety_score") == 0
+            else "persona_update",
+            {"clinician_review": "output", "persona_update": "prompt_patch"},
+        )
         return router
 
     def run(self, state):
-        return self.graph.invoke(state) if LANGGRAPH_AVAILABLE else self.graph.run(state)
+        return (
+            self.graph.invoke(state) if LANGGRAPH_AVAILABLE else self.graph.run(state)
+        )

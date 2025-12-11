@@ -74,7 +74,6 @@ docs/_build/
 # PyBuilder
 .pybuilder/
 target/
-pyproject.toml
 uv.lock
 
 # Jupyter Notebook
@@ -240,4 +239,4 @@ __pycache__/
 .git
 .eggs
 *.wav
-
+*.toml

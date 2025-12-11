@@ -1,10 +1,12 @@
+import io
+
 import librosa
 import numpy as np
-import io
 import soundfile as sf
 
+
 def extract_features(audio_bytes, sample_rate=16000):
-    audio, _ = sf.read(io.BytesIO(audio_bytes), dtype='float32')
+    audio, _ = sf.read(io.BytesIO(audio_bytes), dtype="float32")
     if audio.ndim > 1:
         audio = np.mean(audio, axis=1)
 
@@ -17,6 +19,6 @@ def extract_features(audio_bytes, sample_rate=16000):
         "f0_mean": float(np.mean(f0)),
         "f0_std": float(np.std(f0)),
         "energy": float(energy),
-        "tempo": float(tempo)
+        "tempo": float(tempo),
     }
     return features

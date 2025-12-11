@@ -48,9 +48,9 @@ const MetricCard = ({ metricKey, data }) => {
     if (!definition) return null;
 
     const score = getScore(data.parsed);
-    
+
     return (
-        <motion.div 
+        <motion.div
             className="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -85,13 +85,13 @@ export const EvaluationLoadingScreen = () => (
 export const EndCallModal = ({ isOpen, onClose, onConfirmEnd, onConfirmEvaluate }) => {
     if (!isOpen) return null;
     return (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
         >
-            <motion.div 
+            <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full"
@@ -126,7 +126,7 @@ export default function EvaluationPage({ evaluationData }) {
                 {/* Header */}
                 <header className="flex justify-between items-center mb-8">
                     <h1 className="text-4xl font-bold text-emerald-900">Session Evaluation</h1>
-                    <button 
+                    <button
                         onClick={() => router.push('/')}
                         className="flex items-center gap-2 bg-white border border-stone-200 text-emerald-800 font-semibold py-2 px-4 rounded-lg hover:bg-stone-100 transition-colors shadow-sm"
                     >

@@ -1,10 +1,13 @@
+import io
+
+import soundfile as sf
 import whisper
 from phonemizer import phonemize
-import io
-import soundfile as sf
+
 
 class PhonemeRecognizer:
     """ASR + phoneme extractor."""
+
     def __init__(self, model_name="base"):
         self.model = whisper.load_model(model_name)
 

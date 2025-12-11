@@ -1,7 +1,6 @@
 sqlalchemy
 google-generativeai
-sqlalchemy 
-psycopg2-binary 
+psycopg2-binary
 scipy
 soundfile
 aiohttp

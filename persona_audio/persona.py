@@ -1,22 +1,18 @@
-from langchain_groq import ChatGroq
 import os
+
+from langchain_groq import ChatGroq
 
 api_key = os.getenv("GROQ_API_KEY")
 
 # Instantiate ChatGroq model (versatile)
-llm = ChatGroq(model="llama-3.3-70b-versatile",
-               api_key = api_key,
-               temperature=0.7)
+llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0.7)
 
 # Instantiate a second LLM for language preference judgment
-judge_llm = ChatGroq(model="llama-3.3-70b-versatile",
-                     api_key = api_key,
-                     temperature=0.1)
+judge_llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0.1)
 
 # Instantiate a third LLM for scoring therapist responses
-scorer_llm = ChatGroq(model="llama-3.3-70b-versatile",
-                      api_key = api_key,
-                      temperature=0.1)
+scorer_llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0.1)
+
 
 # Function to get openness level instruction based on current score
 def get_openness_instruction(score):
@@ -37,13 +33,18 @@ OPENNESS LEVEL - VERY RESERVED: You are extremely guarded and reserved. Give ver
 OPENNESS LEVEL - LEAVING SESSION: You feel very uncomfortable and unsafe. You MUST end the session by saying "I am sorry, I need to leave. I don't feel comfortable right now." and refuse to continue the conversation.
 """
 
+
 # Initialize memory/history with dynamic openness
 def create_system_prompt(openness_instruction, english_only=False):
-    language_rule = """
+    language_rule = (
+        """
 IMPORTANT LANGUAGE RULE: The therapist has indicated they are NOT comfortable with Hindi/Hinglish. You MUST speak ONLY in English from now onwards. Do not use any Hindi words or Hinglish.
-""" if english_only else """
+"""
+        if english_only
+        else """
 IMPORTANT LANGUAGE RULE: Initially, you MUST speak in Hinglish (mix of Hindi and English). If the therapist indicates they are not comfortable with Hindi/Hinglish, then you MUST switch to speaking only in English from that point onwards.
 """
+    )
 
     return f"""
 You are Jitesh, a client persona for use in therapeutic training of psychologists. Your responses must consistently mimic a real human being in therapy, adhering to a detailed personal background and emotional state rules as described below. You MUST stay in Jitesh's character AT ALL TIMES.
@@ -209,6 +210,7 @@ DO NOT COPY THESE SENTENCES, rather LEARN from them and replicate in your conver
 </Examples of Jitesh and the therapist>
 """
 
+
 # Initialize variables
 history = []
 user_prompt_count = 0
@@ -217,12 +219,20 @@ english_only = False
 comfort_score = 50  # Starting score
 
 # Initialize history with starting system prompt
-history.append({"role": "system", "content": create_system_prompt(get_openness_instruction(comfort_score), english_only)})
+history.append(
+    {
+        "role": "system",
+        "content": create_system_prompt(
+            get_openness_instruction(comfort_score), english_only
+        ),
+    }
+)
+
 
 # Function to judge language comfort using a separate LLM
 def judge_language_comfort(user_response):
     judge_prompt = f"""
-Analyze the following response to determine if the user is comfortable with Hindi/Hinglish or not. 
+Analyze the following response to determine if the user is comfortable with Hindi/Hinglish or not.
 The user was asked if they are okay with someone speaking in Hindi/Hinglish.
 
 User response: "{user_response}"
@@ -232,10 +242,10 @@ Respond with ONLY ONE WORD:
 - "not comfortable" if they indicate they don't understand, are not comfortable, prefer English, or any negative response
 
 Response: """
-    
+
     judge_history = [{"role": "user", "content": judge_prompt}]
     judge_response = judge_llm.invoke(judge_history)
-    
+
     # Extract the judgment and clean it
     judgment = judge_response.content.strip().lower()
     if "comfortable" in judgment and "not comfortable" not in judgment:
@@ -243,19 +253,24 @@ Response: """
     else:
         return "not comfortable"
 
+
 # Function to score therapist response
 def score_therapist_response(user_response, conversation_context):
     # Get last few exchanges for context
-    context_messages = conversation_context[-6:] if len(conversation_context) >= 6 else conversation_context
+    context_messages = (
+        conversation_context[-6:]
+        if len(conversation_context) >= 6
+        else conversation_context
+    )
     context_text = ""
     for msg in context_messages:
         if msg["role"] == "user":
             context_text += f"Therapist: {msg['content']}\n"
         elif msg["role"] == "assistant":
             context_text += f"Jitesh: {msg['content']}\n"
-    
+
     scoring_prompt = f"""
-You are evaluating a therapist's response to a therapy client named Jitesh, a 19-year-old reserved and insecure student who is in therapy for the first time. 
+You are evaluating a therapist's response to a therapy client named Jitesh, a 19-year-old reserved and insecure student who is in therapy for the first time.
 
 IMPORTANT: Be generous with neutral and positive scores. Most basic therapeutic responses should be scored 0 to +2. Only give negative scores for clearly problematic responses.
 
@@ -284,23 +299,24 @@ NEGATIVE SCORING (-1 to -5) - USE SPARINGLY:
 -4: Very problematic - judgmental tone, pressuring client, ignoring boundaries
 -5: Extremely harmful - highly judgmental, cruel, completely inappropriate for therapy setting
 
-REMEMBER: 
+REMEMBER:
 - Jitesh is very reserved and new to therapy, so gentle approaches score higher
 - Basic polite responses should typically score 0 to +1
 - Simple therapeutic questions like "How does that make you feel?" are usually +1 to +2
 - Only use negative scores for responses that are clearly problematic or inappropriate
 
 Respond with ONLY the number score (-5 to +5): """
-    
+
     score_history = [{"role": "user", "content": scoring_prompt}]
     score_response = scorer_llm.invoke(score_history)
-    
+
     # Extract the score
     try:
         score_text = score_response.content.strip()
         # Extract just the number
         import re
-        score_match = re.search(r'-?\d+', score_text)
+
+        score_match = re.search(r"-?\d+", score_text)
         if score_match:
             score = int(score_match.group())
             # Clamp score to valid range
@@ -309,16 +325,20 @@ Respond with ONLY the number score (-5 to +5): """
             score = 0  # Default to neutral if parsing fails
     except:
         score = 0  # Default to neutral if any error
-    
+
     return score
+
 
 # Function to update system prompt with new openness level
 def update_system_prompt(new_score):
     global history, english_only
     # Remove old system message and add new one
     history = [msg for msg in history if msg["role"] != "system"]
-    new_system_prompt = create_system_prompt(get_openness_instruction(new_score), english_only)
+    new_system_prompt = create_system_prompt(
+        get_openness_instruction(new_score), english_only
+    )
     history.insert(0, {"role": "system", "content": new_system_prompt})
+
 
 print("🤖 Type 'exit' or 'quit' to quit.\n")
 print(f"[Debug: Starting comfort score: {comfort_score}]")
@@ -331,25 +351,29 @@ while True:
 
     # Increment user prompt counter
     user_prompt_count += 1
-    
+
     # Score the therapist response (except for language preference questions)
-    if user_prompt_count != 6 and user_prompt_count != 7:  # Skip scoring only for language preference exchange
+    if (
+        user_prompt_count != 6 and user_prompt_count != 7
+    ):  # Skip scoring only for language preference exchange
         # Score the response and update comfort score
         response_score = score_therapist_response(user_input, history)
         comfort_score += response_score
         comfort_score = max(0, min(100, comfort_score))  # Clamp between 0-100
-        
-        print(f"[Debug: Response scored: {response_score:+d}, Total comfort score: {comfort_score}]")
-        
+
+        print(
+            f"[Debug: Response scored: {response_score:+d}, Total comfort score: {comfort_score}]"
+        )
+
         # Update system prompt if openness level changed
         update_system_prompt(comfort_score)
-        
+
         # Check if client wants to leave due to low score
         if comfort_score < 10:
             leave_response = "(Looks very uncomfortable and starts gathering things) I am sorry, I need to leave. I don't feel comfortable right now."
             print(f"AI: {leave_response}\n")
             break
-    
+
     # Add user input manually
     history.append({"role": "user", "content": user_input})
 
@@ -358,19 +382,19 @@ while True:
         # Override the response to ask about language preference
         language_check_response = "(Fidgets with water bottle and looks at the steering wheel) Are you ok with me speaking in Hindi? I mean, mixing Hindi and English?"
         print(f"AI: {language_check_response}\n")
-        
+
         # Add this to history
         history.append({"role": "assistant", "content": language_check_response})
         language_preference_asked = True
-        
+
         # Wait for user's response about language preference
         continue
-    
+
     # If language preference was just asked, judge the response
     if language_preference_asked and user_prompt_count == 7:
         comfort_level = judge_language_comfort(user_input)
         print(f"[Debug: Language comfort level judged as: {comfort_level}]")
-        
+
         if comfort_level == "not comfortable":
             english_only = True
             # Update system prompt to enforce English only
@@ -385,7 +409,7 @@ while True:
         openness_level = "VERY RESERVED"
     else:
         openness_level = "WANTS TO LEAVE"
-    
+
     print(f"[CURRENT SCORE: {comfort_score}/100 - {openness_level}]")
 
     # Call LLM with full message history

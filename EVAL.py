@@ -1,19 +1,21 @@
-import os
-import sys
-import json
 import argparse
-import logging
-import subprocess
-import re
-from typing import List, Dict, Any, Union
 import importlib.util
+import json
+import logging
+import os
+import re
+import subprocess
+import sys
 from pathlib import Path
+from typing import Any, Dict, List, Union
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class JSONUtils:
     @staticmethod
@@ -38,6 +40,7 @@ class JSONUtils:
             except Exception:
                 return None
 
+
 class ChatLoader:
     @staticmethod
     def load(input_src: Union[str, dict, list]) -> List[Dict[str, str]]:
@@ -51,6 +54,7 @@ class ChatLoader:
         if isinstance(data, list):
             return data
         raise ValueError("Unsupported chat JSON shape")
+
 
 class RubricLoader:
     @staticmethod
@@ -75,6 +79,7 @@ class RubricLoader:
                     return parsed
             except Exception:
                 return {"rubric_1": s}
+
 
 class JudgesRepository:
     def __init__(self) -> None:
@@ -110,6 +115,7 @@ class JudgesRepository:
     def is_judges_key(self, rubric_key: str) -> bool:
         return rubric_key in self.key_map
 
+
 class FirecrawlMCP:
     def __init__(self, timeout: int = 10) -> None:
         self.env = os.environ.copy()
@@ -117,7 +123,12 @@ class FirecrawlMCP:
 
     def _candidates(self) -> List[List[str]]:
         cmds: List[List[str]] = []
-        local = Path.cwd() / "node_modules" / ".bin" / ("firecrawl-mcp.cmd" if os.name == "nt" else "firecrawl-mcp")
+        local = (
+            Path.cwd()
+            / "node_modules"
+            / ".bin"
+            / ("firecrawl-mcp.cmd" if os.name == "nt" else "firecrawl-mcp")
+        )
         if local.exists():
             cmds.append([str(local)])
         if os.name == "nt":
@@ -131,7 +142,14 @@ class FirecrawlMCP:
         for base in self._candidates():
             cmd = base + ["--query", query, "--json"]
             try:
-                proc = subprocess.run(cmd, capture_output=True, text=True, check=False, env=self.env, timeout=self.timeout)
+                proc = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    env=self.env,
+                    timeout=self.timeout,
+                )
             except FileNotFoundError:
                 continue
             except subprocess.TimeoutExpired:
@@ -155,7 +173,12 @@ class FirecrawlMCP:
                     if key in data and isinstance(data[key], list):
                         for item in data[key][:max_results]:
                             if isinstance(item, dict):
-                                txt = item.get("text") or item.get("snippet") or item.get("content") or item.get("summary")
+                                txt = (
+                                    item.get("text")
+                                    or item.get("snippet")
+                                    or item.get("content")
+                                    or item.get("summary")
+                                )
                                 if txt:
                                     out.append(txt)
                             elif isinstance(item, str):
@@ -168,7 +191,12 @@ class FirecrawlMCP:
             elif isinstance(data, list):
                 for item in data[:max_results]:
                     if isinstance(item, dict):
-                        txt = item.get("text") or item.get("snippet") or item.get("content") or item.get("summary")
+                        txt = (
+                            item.get("text")
+                            or item.get("snippet")
+                            or item.get("content")
+                            or item.get("summary")
+                        )
                         if txt:
                             out.append(txt)
                     elif isinstance(item, str):
@@ -177,6 +205,7 @@ class FirecrawlMCP:
                 return out[:max_results]
         return []
 
+
 class OpenAIClient:
     def chat(self, system: str, user: str, model: str, max_tokens: int) -> str:
         api_key = os.environ.get("OPENAI_API_KEY")
@@ -184,6 +213,7 @@ class OpenAIClient:
             raise RuntimeError("OPENAI_API_KEY not set")
         try:
             from openai import OpenAI
+
             client = OpenAI(api_key=api_key)
             resp = client.chat.completions.create(
                 model=model,
@@ -197,11 +227,21 @@ class OpenAIClient:
             assistant_text = None
             try:
                 choice0 = resp.choices[0]
-                msg = getattr(choice0, "message", None) if not isinstance(choice0, dict) else choice0.get("message")
+                msg = (
+                    getattr(choice0, "message", None)
+                    if not isinstance(choice0, dict)
+                    else choice0.get("message")
+                )
                 if msg is None:
-                    assistant_text = getattr(choice0, "text", None) or (choice0.get("text") if isinstance(choice0, dict) else None)
+                    assistant_text = getattr(choice0, "text", None) or (
+                        choice0.get("text") if isinstance(choice0, dict) else None
+                    )
                 else:
-                    content = msg.get("content") if isinstance(msg, dict) else getattr(msg, "content", None)
+                    content = (
+                        msg.get("content")
+                        if isinstance(msg, dict)
+                        else getattr(msg, "content", None)
+                    )
                     if isinstance(content, list) and len(content) > 0:
                         first = content[0]
                         if isinstance(first, dict):
@@ -214,7 +254,9 @@ class OpenAIClient:
                 assistant_text = None
             if not assistant_text:
                 try:
-                    as_str = json.dumps(resp, default=lambda o: getattr(o, "__dict__", str(o)))
+                    as_str = json.dumps(
+                        resp, default=lambda o: getattr(o, "__dict__", str(o))
+                    )
                 except Exception:
                     as_str = str(resp)
                 parsed = JSONUtils.extract_object(as_str)
@@ -226,6 +268,7 @@ class OpenAIClient:
         except Exception:
             try:
                 import openai
+
                 openai.api_key = api_key
                 resp = openai.ChatCompletion.create(
                     model=model,
@@ -243,8 +286,11 @@ class OpenAIClient:
             except Exception:
                 raise RuntimeError("OpenAI call failed")
 
+
 class Evaluator:
-    def __init__(self, mcp: FirecrawlMCP, judges: JudgesRepository, llm: OpenAIClient) -> None:
+    def __init__(
+        self, mcp: FirecrawlMCP, judges: JudgesRepository, llm: OpenAIClient
+    ) -> None:
         self.mcp = mcp
         self.judges = judges
         self.llm = llm
@@ -259,7 +305,15 @@ class Evaluator:
             parts.append(f"Exchange {i} - Therapist: {t}")
         return "\n".join(parts)
 
-    def evaluate(self, chats: Union[str, dict, list], rubric_src: Union[str, dict], use_firecrawl: bool, model: str, max_web_snippets: int = 5, max_tokens: int = 1500) -> Dict[str, Any]:
+    def evaluate(
+        self,
+        chats: Union[str, dict, list],
+        rubric_src: Union[str, dict],
+        use_firecrawl: bool,
+        model: str,
+        max_web_snippets: int = 5,
+        max_tokens: int = 1500,
+    ) -> Dict[str, Any]:
         exchanges = ChatLoader.load(chats)
         rubrics = RubricLoader.load(rubric_src)
         chat_context = self.build_chat_context(exchanges)
@@ -271,27 +325,46 @@ class Evaluator:
             if template_text and "{file_path}" in template_text:
                 prompt_body = template_text.replace("{file_path}", chat_context)
             else:
-                prompt_body = (
-                    f"You are an expert clinical evaluator.\nRubric ({rk}): {rtext}\n\n"
-                    f"Conversation:\n{chat_context}\n\n"
-                    "Respond with a single JSON object including at least the score for this rubric and a short rationale."
-                )
+                prompt_lines = [
+                    "You are an expert clinical evaluator.",
+                    f"Rubric ({rk}): {rtext}",
+                    "",
+                    "Conversation:",
+                    chat_context,
+                    "",
+                    (
+                        "Respond with a single JSON object including at least the score"
+                        " for this rubric and a short rationale."
+                    ),
+                ]
+                prompt_body = "\n".join(prompt_lines)
             web_context_r: List[str] = []
             if use_firecrawl:
-                q = f"{rk} evaluation references: " + " ".join((ex.get("patient", "") for ex in exchanges))[:800]
+                patients_join = " ".join((ex.get("patient", "") for ex in exchanges))
+                q = f"{rk} evaluation references: {patients_join[:800]}"
                 try:
                     web_context_r = self.mcp.fetch(q, max_results=max_web_snippets)
                 except Exception:
                     web_context_r = []
             if web_context_r:
-                prompt_body += "\n\nWeb references (for justification):\n" + "\n\n".join(web_context_r)
-                prompt_body += "\n\nUse the provided web references to support and cite any factual claims in your rationale."
+                prompt_body += (
+                    "\n\nWeb references (for justification):\n"
+                    + "\n\n".join(web_context_r)
+                )
+                prompt_body += (
+                    "\n\nUse the provided web references to support and cite any "
+                    "factual claims in your rationale."
+                )
             system_msg = (
-                "You are an expert clinical evaluator. Return ONLY a single JSON object for the requested rubric. "
-                "Include numeric score and a concise rationale. Include any citations derived from the provided web references."
+                "You are an expert clinical evaluator. Return ONLY a single JSON "
+                "object for the requested rubric. Include numeric score and a "
+                "concise rationale. Include any citations derived from the "
+                "provided web references."
             )
             try:
-                assistant_text = self.llm.chat(system_msg, prompt_body, model=model, max_tokens=max_tokens)
+                assistant_text = self.llm.chat(
+                    system_msg, prompt_body, model=model, max_tokens=max_tokens
+                )
             except Exception as e:
                 scores_out[rk] = 0
                 details_out[rk] = {"error": str(e)}
@@ -309,7 +382,18 @@ class Evaluator:
             rationale_val = None
             citations_val = None
             if isinstance(parsed, dict):
-                keys = [f"{rk}_score", "helpfulness_score", "empathy_score", "safety_score", "collaboration_score", "agenda_setting_score", "goals_topics_score", "guided_discovery_score", "microaggression_score", "score"]
+                keys = [
+                    f"{rk}_score",
+                    "helpfulness_score",
+                    "empathy_score",
+                    "safety_score",
+                    "collaboration_score",
+                    "agenda_setting_score",
+                    "goals_topics_score",
+                    "guided_discovery_score",
+                    "microaggression_score",
+                    "score",
+                ]
                 for k in keys:
                     if k in parsed:
                         score_val = parsed.get(k)
@@ -330,7 +414,11 @@ class Evaluator:
                 if isinstance(score_val, (int, float)):
                     normalized = score_val
                 elif isinstance(score_val, str):
-                    normalized = float(score_val) if ('.' in score_val or 'e' in score_val.lower()) else int(score_val)
+                    normalized = (
+                        float(score_val)
+                        if ("." in score_val or "e" in score_val.lower())
+                        else int(score_val)
+                    )
                 elif score_val is None:
                     normalized = 0
                 else:
@@ -347,23 +435,75 @@ class Evaluator:
                 "citations": citations_val,
                 "web_references_used": web_context_r,
             }
-        
-        details_out['conversation'] = exchanges
+
+        details_out["conversation"] = exchanges
         return {"scores": scores_out, "details": details_out}
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate therapy chat JSON against rubrics, optional Firecrawl augmentation.")
-    parser.add_argument("--input", "-i", required=True, help="Path to chat JSON file (or pass '-' to read stdin).")
-    parser.add_argument("--rubric", "-r", required=True, help="Path to rubric JSON/text OR a JSON string OR a plain rubric text.")
-    parser.add_argument("--output", "-o", default="evaluation_output.json", help="Output JSON file path.")
-    parser.add_argument("--no-firecrawl", action="store_true", help="Disable Firecrawl augmentation.")
-    parser.add_argument("--model", default="gpt-4", help="OpenAI model to use (requires OPENAI_API_KEY).")
-    parser.add_argument("--details-file", "-d", default=None, help="Optional path to write detailed evaluation output (rationales, citations).")
-    parser.add_argument("--rubrics-include", default=None, help="Comma-separated rubric keys to evaluate (filters the rubric file).")
-    parser.add_argument("--max-web-snippets", type=int, default=5, help="Max web snippets to include per rubric when using Firecrawl.")
-    parser.add_argument("--mcp-timeout", type=int, default=10, help="Timeout in seconds for each Firecrawl command attempt.")
-    parser.add_argument("--max-tokens", type=int, default=1500, help="Max tokens for the model response per rubric.")
-    parser.add_argument("--fast", action="store_true", help="Use faster defaults (smaller model and fewer tokens).")
+    parser = argparse.ArgumentParser(
+        description="Evaluate therapy chat JSON against rubrics, optional Firecrawl augmentation."
+    )
+    parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        help="Path to chat JSON file (or pass '-' to read stdin).",
+    )
+    parser.add_argument(
+        "--rubric",
+        "-r",
+        required=True,
+        help="Path to rubric JSON/text OR a JSON string OR a plain rubric text.",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        default="evaluation_output.json",
+        help="Output JSON file path.",
+    )
+    parser.add_argument(
+        "--no-firecrawl", action="store_true", help="Disable Firecrawl augmentation."
+    )
+    parser.add_argument(
+        "--model",
+        default="gpt-4",
+        help="OpenAI model to use (requires OPENAI_API_KEY).",
+    )
+    parser.add_argument(
+        "--details-file",
+        "-d",
+        default=None,
+        help="Optional path to write detailed evaluation output (rationales, citations).",
+    )
+    parser.add_argument(
+        "--rubrics-include",
+        default=None,
+        help="Comma-separated rubric keys to evaluate (filters the rubric file).",
+    )
+    parser.add_argument(
+        "--max-web-snippets",
+        type=int,
+        default=5,
+        help="Max web snippets to include per rubric when using Firecrawl.",
+    )
+    parser.add_argument(
+        "--mcp-timeout",
+        type=int,
+        default=10,
+        help="Timeout in seconds for each Firecrawl command attempt.",
+    )
+    parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=1500,
+        help="Max tokens for the model response per rubric.",
+    )
+    parser.add_argument(
+        "--fast",
+        action="store_true",
+        help="Use faster defaults (smaller model and fewer tokens).",
+    )
     args = parser.parse_args()
     if args.input == "-":
         chats = json.load(sys.stdin)
@@ -376,7 +516,9 @@ def main():
             model = "gpt-4o-mini"
         if max_tokens > 900:
             max_tokens = 900
-    evaluator = Evaluator(FirecrawlMCP(timeout=args.mcp_timeout), JudgesRepository(), OpenAIClient())
+    evaluator = Evaluator(
+        FirecrawlMCP(timeout=args.mcp_timeout), JudgesRepository(), OpenAIClient()
+    )
     rubric_arg: Union[str, dict] = args.rubric
     if args.rubrics_include:
         include = [k.strip() for k in args.rubrics_include.split(",") if k.strip()]
@@ -399,7 +541,11 @@ def main():
     except Exception as e:
         logger.error("Evaluation failed: %s", e)
         sys.exit(2)
-    scores_only = result.get("scores") if isinstance(result, dict) and "scores" in result else result
+    scores_only = (
+        result.get("scores")
+        if isinstance(result, dict) and "scores" in result
+        else result
+    )
     with open(args.output, "w", encoding="utf-8") as fh:
         json.dump(scores_only, fh, indent=2)
     print(f"Wrote scores to {args.output}")
@@ -411,6 +557,7 @@ def main():
             print(f"Wrote details to {args.details_file}")
         except Exception as e:
             logger.error("Failed to write details file %s: %s", args.details_file, e)
+
 
 if __name__ == "__main__":
     main()

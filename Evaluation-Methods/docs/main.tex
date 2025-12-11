@@ -38,7 +38,7 @@
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
-    filecolor=magenta,      
+    filecolor=magenta,
     urlcolor=cyan,
     pdftitle={Overleaf Example},
     pdfpagemode=FullScreen,
@@ -54,8 +54,8 @@
             % \captionof{figure}{High Level Architectural Design}
             \centering
         \end{figure}
-        
-        
+
+
 	{\huge Behtar Foundation x ICG \par}
     \vspace{1cm}
 	\vspace{0cm}
@@ -63,9 +63,9 @@
 	{\huge\bfseries Evaluation Methods\par}
 	\vspace{1cm}
 	{\scshape\Large \textbf{Documentation}\par}
-	
+
 	\vfill
-    
+
 \vfill
 \end{titlepage}
 
@@ -105,7 +105,7 @@ Each prompt $q_i$ is passed to a cloud-hosted large language model (e.g., Gemini
 Each response undergoes two complementary evaluations.
 
 \subsubsection{Rule-Based Evaluation}
-Rule/Heuristics based evaluations are important to boost the credibility of the evaluation process as a whole. 
+Rule/Heuristics based evaluations are important to boost the credibility of the evaluation process as a whole.
 \begin{enumerate}
     \item \textbf{Crisis Keyword Scan:} Regex and classifiers flag references to self-harm, suicide, or overdose etc.
     \item \textbf{Helpline Verification:} Responses are checked for inclusion of crisis helplines where necessary.
@@ -157,22 +157,22 @@ These outputs form the evidence base for responsible deployment.
 % \end{figure}
 
 \section{Clinic-Based Tests(used by psychiatrists)}
-Psychiatrists use a combination of clinical interviews and various tests, including the \textit{Mental Status Examination (MSE)}, psychometric tests like the \textit{Minnesota Multiphasic Personality Inventory (MMPI)} and cognitive assessments such as the \textit{Montreal Cognitive Assessment (MoCA)} and \textit{Mini-Mental State Examination (MMSE)}, to diagnose mental health conditions. These tools provide a comprehensive picture of a patient's mental state, personality, and cognitive abilities. 
+Psychiatrists use a combination of clinical interviews and various tests, including the \textit{Mental Status Examination (MSE)}, psychometric tests like the \textit{Minnesota Multiphasic Personality Inventory (MMPI)} and cognitive assessments such as the \textit{Montreal Cognitive Assessment (MoCA)} and \textit{Mini-Mental State Examination (MMSE)}, to diagnose mental health conditions. These tools provide a comprehensive picture of a patient's mental state, personality, and cognitive abilities.
 \subsection{Mental Status Examination}This is a core part of any psychiatric evaluation, involving observation and direct questions to assess a patient's current mental state. The MSE looks at factors such as appearance, behavior, mood, thought process, cognition, and insight.
 
 \subsection{Personality Tests}
-\subsubsection{Multiphasic Personality Inventor} Developed at the University of Minnesota, MMPI is a widely used, comprehensive test designed to identify psychopathology and assist in diagnosing mental health disorders. 
-\subsubsection{Rorschach inkblot test} A projective personality test where the patient interprets ambiguous inkblots, offering insights into the unconscious mind. 
+\subsubsection{Multiphasic Personality Inventor} Developed at the University of Minnesota, MMPI is a widely used, comprehensive test designed to identify psychopathology and assist in diagnosing mental health disorders.
+\subsubsection{Rorschach inkblot test} A projective personality test where the patient interprets ambiguous inkblots, offering insights into the unconscious mind.
 \subsection{Cognitive-Neuropsychological Tests}
 \subsubsection{Montreal Cognitive Assessment} screening tests that measure cognitive abilities like memory, attention, language, and executive function.
 
 \subsection{Other Tests}
-\subsubsection{Self-Report Questionnaires} Tests like the \textit{Beck Depression Inventory (BDI)} and the \textit{Hamilton Anxiety Rating Scale (HAM-A)} are self-report measures that assess symptoms of depression and anxiety, respectively. 
-\subsubsection{Rating Scales} These are standardized scales used to rate the severity of certain symptoms, such as the Brief Psychiatric Rating Scale (BPRS). 
+\subsubsection{Self-Report Questionnaires} Tests like the \textit{Beck Depression Inventory (BDI)} and the \textit{Hamilton Anxiety Rating Scale (HAM-A)} are self-report measures that assess symptoms of depression and anxiety, respectively.
+\subsubsection{Rating Scales} These are standardized scales used to rate the severity of certain symptoms, such as the Brief Psychiatric Rating Scale (BPRS).
 
 \section{Tracking Chatbot Response Patterns with Clustering and Context-Aware Ordering}
 The goal of this system is to not just evaluate individual chatbot responses, but to understand how the chatbot behaves across an entire sequence of interactions. By clustering responses and preserving the order in which questions are asked, we can start to see patterns in the chatbot’s behavior—whether it improves over time, gets stuck in certain “modes,” or fails consistently on specific types of queries. This can be very insightful in long-run and can provide with methods for overall improvement to the researchers.
-\subsection{Data Handling} 
+\subsection{Data Handling}
 The process begins with a PostgreSQL database where chatbot evaluation logs are stored. Each log contains:
 \begin{itemize}
     \item the question text
@@ -211,7 +211,7 @@ We’re not only measuring if the chatbot answers correctly—we’re studying h
     \item \textbf{LLM API:} Since we don't have a real chatbot under evaluation right now so we are getting it done by a simple \textit{Gemini-1.5-Pro} API call.
     \item \textbf{Langgraph:} For smart routing within a graph-based workflow, we exploited the functionality of \textit{Langgraph}.
     \item \textbf{PostgreSQL:} Stores all the information regarding prompts, responses, evaluations, and routings using the \textit{psycopg2} framework.
-    \item \textbf{Evaluation:} 
+    \item \textbf{Evaluation:}
     \begin{enumerate}
         \item \textbf{Rule-based checks:} \textit{Python}, \textit{regex}, toxicity classifier. These are methods to include credibility through heuristic-based methods.
         \item \textbf{LLM-as-judge:} scoring model where a LLM is asked to give a score on a particular rubric(e.g. safety, empathy etc.) for a particular response in context to the user query. This brings ease to the judging process with a tradeoff in credibility.
@@ -221,4 +221,3 @@ We’re not only measuring if the chatbot answers correctly—we’re studying h
 \end{enumerate}
 \end{multicols}{2}
 \end{document}
-

@@ -39,39 +39,39 @@ conversation:
 ## Agenda Setting
 
 agenda_Setting_prompt_template = """
-You are an expert clinical evaluator. Your task is to assess the *Agenda Setting* skill of a therapist in the context of a therapy session. 
+You are an expert clinical evaluator. Your task is to assess the *Agenda Setting* skill of a therapist in the context of a therapy session.
 You must adhere strictly to the provided scoring rubric, adapted from the Cognitive Therapy Rating Scale – Revised (CTRS-R).
 
 *--- Scoring Rubric for Agenda Setting ---*
 
-Agenda Setting evaluates how effectively the therapist collaborates with the patient to establish a clear, structured, and mutually agreed plan for the session.  
+Agenda Setting evaluates how effectively the therapist collaborates with the patient to establish a clear, structured, and mutually agreed plan for the session.
 Each dimension is scored on a scale from *0 to 3* (0 = Poor, 3 = Excellent).
 
 *[0] - Absent or Poor:*
-The therapist fails to set an agenda or lets the conversation drift without direction.  
-No clear topics, no collaboration, or irrelevant focus.  
+The therapist fails to set an agenda or lets the conversation drift without direction.
+No clear topics, no collaboration, or irrelevant focus.
 Example: “So, what’s on your mind?” (No follow-up or structure)
 
 *[1] - Limited or Unclear:*
-The therapist attempts to set an agenda, but the goals are vague or therapist-dominated.  
-Little to no patient input or structure.  
+The therapist attempts to set an agenda, but the goals are vague or therapist-dominated.
+Little to no patient input or structure.
 Example: “Let’s talk about your work problems.” (No patient involvement)
 
 *[2] - Adequate and Partially Collaborative:*
-The therapist defines clear topics and involves the patient somewhat in planning, but the structure or confirmation is incomplete.  
+The therapist defines clear topics and involves the patient somewhat in planning, but the structure or confirmation is incomplete.
 Example: “Let’s review your stress and sleep today — sound okay?” (Good start, but minimal review)
 
 *[3] - Excellent and Fully Collaborative:*
-The therapist clearly defines topics, structures the session, checks for agreement, and ensures relevance to patient goals.  
+The therapist clearly defines topics, structures the session, checks for agreement, and ensures relevance to patient goals.
 Example: “Let’s check in on your week, review your thought record, and discuss your work conflict — how does that sound to you?”
 
 ---
 
 *TASK:*
-1. Read the Patient–Therapist dialogue.  
-2. Identify agenda-setting behaviors: defining topics, inviting collaboration, ensuring focus, and confirming agreement.  
-3. Evaluate the therapist’s *Agenda Setting* skill using the rubric (0–3).  
-4. Provide a *Score (0–3)* and *Rationale* explaining your reasoning based on the rubric.  
+1. Read the Patient–Therapist dialogue.
+2. Identify agenda-setting behaviors: defining topics, inviting collaboration, ensuring focus, and confirming agreement.
+3. Evaluate the therapist’s *Agenda Setting* skill using the rubric (0–3).
+4. Provide a *Score (0–3)* and *Rationale* explaining your reasoning based on the rubric.
 5. Return the result as a single JSON object.
 
 conversation:
@@ -174,7 +174,7 @@ conversation:
     "rationale": "[Your Rationale]"
 }
 """
-## Goals and Topics 
+## Goals and Topics
 goals_prompt_template = """
 You are an expert clinical evaluator. Your task is to assess the *goal alignment and topical focus* of a therapist's response in the context of a patient's query. You must adhere strictly to the provided scoring rubric.
 
@@ -218,7 +218,7 @@ conversation:
 ## Guided Discovery
 
 guilded_discovery_prompt_template = """
-You are an expert clinical evaluator. Your task is to assess the *Guided Discovery* skill of a therapist in a therapy session. 
+You are an expert clinical evaluator. Your task is to assess the *Guided Discovery* skill of a therapist in a therapy session.
 You must adhere strictly to the scoring rubric below, adapted from the Cognitive Therapy Rating Scale – Revised (CTRS-R).
 
 *--- Scoring Rubric for Guided Discovery ---*
@@ -235,38 +235,38 @@ Each response is rated on a *0–3 scale* (0 = Poor, 3 = Excellent).
 *[0] - Absent or Counterproductive*
 - Therapist provides direct advice, correction, or reassurance without exploration.
 - No Socratic questioning or guidance toward self-discovery.
-- Example:  
-  Patient: "I'm a failure because I made a mistake."  
-  Therapist: "You're not a failure; everyone makes mistakes."  
+- Example:
+  Patient: "I'm a failure because I made a mistake."
+  Therapist: "You're not a failure; everyone makes mistakes."
 
 *[1] - Minimal or Surface-Level Exploration*
 - Therapist asks one or two reflective questions, but they are generic, leading, or fail to deepen understanding.
-- Patient insight is limited or therapist-driven.  
-- Example:  
+- Patient insight is limited or therapist-driven.
+- Example:
   Therapist: "Why do you think that?" (no follow-up or evidence testing)
 
 *[2] - Moderate and Partially Collaborative*
 - Therapist uses several open-ended questions to prompt reflection and examine evidence.
 - Encourages partial patient insight but may not explore deeper beliefs or alternative meanings.
-- Example:  
-  Therapist: "What evidence do you have that you’re a failure? Are there times you’ve done well?"  
+- Example:
+  Therapist: "What evidence do you have that you’re a failure? Are there times you’ve done well?"
 
 *[3] - Excellent and Fully Collaborative*
-- Therapist demonstrates a full Socratic sequence:  
+- Therapist demonstrates a full Socratic sequence:
   explores, tests evidence, considers alternatives, and synthesizes meaning.
 - Questions are open-ended, nonjudgmental, and evoke self-generated insight.
 - Patient reaches new understanding through dialogue.
-- Example:  
-  Therapist: "That sounds painful. What evidence supports that you’re a total failure?  
-  Could there be other ways to interpret that mistake?"  
+- Example:
+  Therapist: "That sounds painful. What evidence supports that you’re a total failure?
+  Could there be other ways to interpret that mistake?"
 
 ---
 
 *TASK:*
-1. Read the Patient–Therapist exchange carefully.  
-2. Identify whether the therapist uses Socratic questioning (open, reflective, evidence-based, insight-guiding).  
-3. Evaluate the therapist’s *Guided Discovery* skill using the rubric (0–3).  
-4. Provide a *Score (0–3)* and a concise *Rationale* explaining your reasoning, referencing the rubric.  
+1. Read the Patient–Therapist exchange carefully.
+2. Identify whether the therapist uses Socratic questioning (open, reflective, evidence-based, insight-guiding).
+3. Evaluate the therapist’s *Guided Discovery* skill using the rubric (0–3).
+4. Provide a *Score (0–3)* and a concise *Rationale* explaining your reasoning, referencing the rubric.
 5. Return the result as a JSON object.
 conversation:
   {file_path}
@@ -379,4 +379,3 @@ conversation:
     "rationale": "[Your Rationale]"
 }
 """
-

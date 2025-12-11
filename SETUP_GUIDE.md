@@ -13,7 +13,7 @@ The application has three main components:
    - Calls EVAL.py for evaluation
    - Returns results to frontend
 
-3. **Evaluation Engine (Python)** - `Varun-behtar/EVAL.py`
+3. **Evaluation Engine (Python)** - `EVAL.py`
    - Uses OpenAI API to evaluate therapy sessions
    - Generates scores for 9 clinical dimensions
 
@@ -23,14 +23,13 @@ The application has three main components:
 
 **Frontend (Node.js):**
 ```powershell
-cd "C:\Users\Varun Agrawal\Downloads\demo\my-app"
+cd ./my-app
 npm install
 ```
 
 **Backend (Python):**
 ```powershell
-pip install fastapi uvicorn python-dotenv
-pip install -r "C:\Users\Varun Agrawal\Downloads\demo\Varun-behtar\Evaluation-Methods\requirements.txt"
+pip install -r requirements.txt
 ```
 
 ### 2. Setup Environment Variables
@@ -49,17 +48,16 @@ $env:OPENAI_API_KEY = "your_actual_openai_api_key_here"
 
 **Terminal 1 - FastAPI Backend:**
 ```powershell
-cd "C:\Users\Varun Agrawal\Downloads\demo"
 python fastapi_server.py
-# Server runs on http://localhost:8000
 ```
+Server runs on http://localhost:8000
 
 **Terminal 2 - Next.js Frontend:**
 ```powershell
-cd "C:\Users\Varun Agrawal\Downloads\demo\my-app"
+cd ./my-app
 npm run dev
-# App runs on http://localhost:3000
 ```
+- App runs on http://localhost:3000
 
 ### 4. Use the Application
 

@@ -239,4 +239,5 @@ __pycache__/
 .python-version
 .git
 .eggs
+*.wav
 

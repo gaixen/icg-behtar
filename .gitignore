@@ -75,6 +75,7 @@ docs/_build/
 .pybuilder/
 target/
 pyproject.toml
+uv.lock
 
 # Jupyter Notebook
 .ipynb_checkpoints

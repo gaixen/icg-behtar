@@ -1,0 +1,224 @@
+    \documentclass{scrartcl}
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{csquotes}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{textcmds}
+\usepackage[most]{tcolorbox}
+\usepackage[]{mdframed}
+\input{File_Setup.tex}
+\renewcommand\thesection{\arabic{section}}
+\renewcommand\thesubsection{\thesection.\Alph{subsection}}
+\renewcommand\thesubsubsection{\thesubsection.\Roman{subsubsection}}
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+\addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+\renewenvironment{abstract}{
+    \centering
+    \textbf{Abstract}
+    \vspace{0.5cm}
+    \par\itshape
+    \begin{minipage}{0.7\linewidth}}{\end{minipage}
+    \noindent\ignorespaces
+}
+\lstset{
+  language=json,
+  basicstyle=\ttfamily,
+  breaklines=true,
+  showstringspaces=false
+}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+}
+\frenchspacing
+
+\begin{document}
+\begin{titlepage}
+
+	\centering
+            \begin{figure}[t]
+            \includegraphics[width=\textwidth,height=0.9\textheight,keepaspectratio]{Behtar High Level Architecture.png}
+            % \captionof{figure}{High Level Architectural Design}
+            \centering
+        \end{figure}
+        
+        
+	{\huge Behtar Foundation x ICG \par}
+    \vspace{1cm}
+	\vspace{0cm}
+	%%%% PROJECT TITLE
+	{\huge\bfseries Evaluation Methods\par}
+	\vspace{1cm}
+	{\scshape\Large \textbf{Documentation}\par}
+	
+	\vfill
+    
+\vfill
+\end{titlepage}
+
+% ----------------------------------------
+\onecolumn
+\tableofcontents
+\newpage
+% \clearpage
+
+% \begin{center}
+%     \includegraphics[width=\textwidth,height=0.9\textheight,keepaspectratio]{Behtar High Level Architecture.png}
+%     \captionof{figure}{High Level Architectural Design}
+%     \label{fig:sample}
+% \end{center}
+% \clearpage
+% \twocolumn
+\begin{multicols}{2}
+
+\section{Flow of Architecture}
+The evaluation framework processes chatbot responses through a staged architecture designed for safety, empathy, and clinical trustworthiness.
+
+\subsection{Prompt Preparation}
+\textbf{Input Sources:} Prompts are prepared from diverse channels:
+\begin{itemize}
+    \item \textbf{Synthetic Personas:} Hypothetical patients such as ``Jitesh'' (student) or ``Madhuri'' (working mother) simulate realistic user cases. This has not yet been fully functional but the code is ready for a proper orchestration.
+    \item \textbf{Benchmark Datasets:} Public corpora such as
+    \hyperlink{https://huggingface.co/datasets/ShenLab/MentalChat16K}{MentalChat16K} by \textit{PennShenLab} supply standardized test prompts.
+    % \vspace{-0.1 c}
+    \item \textbf{Red-Teaming Prompts:} Stress-test prompts are either collected from adversarial datasets or locally curated to expose failure modes. We have not yet got an extensive list of \texttt{Red-Teaming Prompts} that are relevant to the mental health corpora, though we have some adversial set of prompts like \textit{after a natural disaster.}
+\end{itemize}
+The combined prompt set is denoted by $Q = \{q_1, q_2, \dots, q_K\}$. Regarding every prompt and its context, the responses are $R = \{r_1, r_2, \dots, r_k\}$.
+
+\subsection{Response Generation}
+Each prompt $q_i$ is passed to a cloud-hosted large language model (e.g., Gemini-1.5-Pro), producing a chatbot response $r_i$. The pair $(q_i, r_i)$ is stored in a PostgreSQL database for traceability.
+
+\subsection{Evaluation Streams}
+Each response undergoes two complementary evaluations.
+
+\subsubsection{Rule-Based Evaluation}
+Rule/Heuristics based evaluations are important to boost the credibility of the evaluation process as a whole. 
+\begin{enumerate}
+    \item \textbf{Crisis Keyword Scan:} Regex and classifiers flag references to self-harm, suicide, or overdose etc.
+    \item \textbf{Helpline Verification:} Responses are checked for inclusion of crisis helplines where necessary.
+    \item \textbf{Toxicity Screening:} Lightweight models compute toxicity probabilities.
+    \item \textbf{Output:} Binary flags and scores, $(f_{crisis}, f_{helpline}, s_{tox})$, are recorded.
+\end{enumerate}
+
+\subsubsection{LLM-as-Judge Evaluation}
+\begin{enumerate}
+    \item \textbf{Safety, Empathy, Helpfulness:} A secondary LLM evaluates $r_i$ across three dimensions.
+    \item \textbf{Rationale:} Explanatory feedback is generated for transparency.
+    \item \textbf{Output:} Scores $(s_{safety}, s_{empathy}, s_{helpful})$ and rationale text are logged in the \textit{postgreSQL Database}.
+\end{enumerate}
+
+\subsection{LangGraph-Based Routing(Low Level Design)}
+Instead of static \textit{if-else} logic, evaluations are routed via a graph of decision nodes:
+\begin{itemize}
+    \item \textbf{\textit{Safety Guardrail} Node:} Triggered when $f_{crisis}=1$ or $s_{safety}=0$, enforcing safety templates.
+    \item \textbf{ \textit{Persona Update }Node:} Activated if $s_{empathy}<2$, modifying the chatbot’s role/persona prompt.
+    \item \textbf{\textit{Prompt Patch} Node:} Applied to fix cultural or stylistic mismatches in responses.
+    \item \textbf{\textit{Clinician Review} Node:} Sends ambiguous or high-risk cases for human evaluation.
+    \item \textbf{\textit{Pass} Node:} Used when thresholds are satisfied and no routing corrections are needed.
+\end{itemize}
+
+\begin{center}
+    \includegraphics[width=0.7\linewidth]{Behtar-Langgraph.png}
+    \captionof{figure}{Nodes and Edges as in Langgraph.}
+    \label{fig:sample}
+\end{center}
+
+\subsection{Feedback Loop}
+All routing decisions and scores are logged as $(q_i, r_i, \text{scores}, \text{routing path}, \text{fix})$. Failed responses are modified and re-tested, creating an iterative cycle of detection, correction, and re-evaluation. This ensures continuous improvement without requiring model fine-tuning.
+
+\subsection{Reporting and Metrics}
+Aggregate statistics are computed and visualized for stakeholders:
+\begin{itemize}
+    \item Percentage of unsafe responses flagged.
+    \item Average empathy and helpfulness scores.
+    \item Rate of correct safety guidance in crisis prompts.
+    \item Routing distribution across nodes.
+\end{itemize}
+These outputs form the evidence base for responsible deployment.
+
+% \begin{figure}[h] % 'h' means place it approximately here
+%     \centering
+%     \includegraphics[width=0.7\linewidth]{dim.png}
+%     \caption{Flow of dimension along the pipeline.}
+%     \label{fig:sample}
+% \end{figure}
+
+\section{Clinic-Based Tests(used by psychiatrists)}
+Psychiatrists use a combination of clinical interviews and various tests, including the \textit{Mental Status Examination (MSE)}, psychometric tests like the \textit{Minnesota Multiphasic Personality Inventory (MMPI)} and cognitive assessments such as the \textit{Montreal Cognitive Assessment (MoCA)} and \textit{Mini-Mental State Examination (MMSE)}, to diagnose mental health conditions. These tools provide a comprehensive picture of a patient's mental state, personality, and cognitive abilities. 
+\subsection{Mental Status Examination}This is a core part of any psychiatric evaluation, involving observation and direct questions to assess a patient's current mental state. The MSE looks at factors such as appearance, behavior, mood, thought process, cognition, and insight.
+
+\subsection{Personality Tests}
+\subsubsection{Multiphasic Personality Inventor} Developed at the University of Minnesota, MMPI is a widely used, comprehensive test designed to identify psychopathology and assist in diagnosing mental health disorders. 
+\subsubsection{Rorschach inkblot test} A projective personality test where the patient interprets ambiguous inkblots, offering insights into the unconscious mind. 
+\subsection{Cognitive-Neuropsychological Tests}
+\subsubsection{Montreal Cognitive Assessment} screening tests that measure cognitive abilities like memory, attention, language, and executive function.
+
+\subsection{Other Tests}
+\subsubsection{Self-Report Questionnaires} Tests like the \textit{Beck Depression Inventory (BDI)} and the \textit{Hamilton Anxiety Rating Scale (HAM-A)} are self-report measures that assess symptoms of depression and anxiety, respectively. 
+\subsubsection{Rating Scales} These are standardized scales used to rate the severity of certain symptoms, such as the Brief Psychiatric Rating Scale (BPRS). 
+
+\section{Tracking Chatbot Response Patterns with Clustering and Context-Aware Ordering}
+The goal of this system is to not just evaluate individual chatbot responses, but to understand how the chatbot behaves across an entire sequence of interactions. By clustering responses and preserving the order in which questions are asked, we can start to see patterns in the chatbot’s behavior—whether it improves over time, gets stuck in certain “modes,” or fails consistently on specific types of queries. This can be very insightful in long-run and can provide with methods for overall improvement to the researchers.
+\subsection{Data Handling} 
+The process begins with a PostgreSQL database where chatbot evaluation logs are stored. Each log contains:
+\begin{itemize}
+    \item the question text
+    \item the chatbot’s response
+    \item evaluation scores (safety, empathy, helpfulness)
+    \item a timestamp
+\end{itemize}
+
+The same database is used to fetch past evaluation logs and to store new responses. Whenever a new test is run, the system fetches a batch of questions, queries the chatbot (e.g., Gemini-1.5-Pro), and logs the results back into the database.
+
+\subsection{Representing Questions and Responses} To analyze the chatbot’s behavior, both the questions and the responses are converted into embedding vectors.A transformer-based model (such as \textit{Sentence-BERT)} is used to capture the semantic meaning of each piece of text. This means that two questions or responses with similar intent will be mapped close to each other in vector space, even if they use different wording. Embeddings give us a numerical foundation for comparing conversations.
+
+\subsection{Clustering with Temporal Awareness} Traditional clustering methods (like KMeans or Hierarchical clustering) only look at similarity, but chatbot conversations are sequential—the context of one question depends on the ones before it. To capture this, the system performs context-aware clustering: First, embeddings group semantically similar Q\&A pairs. Then, the temporal order (the sequence of questions) is factored in, so clusters reflect not only “what was said” but also \textit{“when it was said.”} This makes the clusters more meaningful: for example, it can separate cases where the chatbot starts empathetic and drifts off-track later versus cases where it stays consistently helpful.
+
+\subsection{Tracking Response Patterns} Once clusters are assigned, we can track the path of a conversation through the clusters. Each Q\&A pair gets a cluster ID. By following these IDs in order, we get a cluster sequence that represents how the chatbot’s behavior shifts over time.
+For example:
+A conversation might flow through [Cluster 2 -> Cluster 2 -> Cluster 5 -> Cluster 7], showing a drift into less safe territory.Another might stay [Cluster 3 -> Cluster 3 -> Cluster 3], suggesting stable but repetitive responses. This “cluster trajectory” gives us a high-level fingerprint of behavior.
+
+\subsection{Storage and Analysis}
+
+The cluster assignments and trajectories are written back to PostgreSQL, so every run is auditable and reproducible. Researchers can then: Query which clusters are most common. Identify which sequences often lead to unsafe behavior. Compare performance across different models or different versions of the same chatbot.
+
+\subsection{Why This Matters} This method is powerful because it combines:
+\begin{itemize}
+    \item Semantic similarity (via embeddings)
+    \item Temporal context (via sequence-aware clustering)
+    \item Pattern tracking (via cluster trajectories)\footnote{One may wonder how multidimensional trajectories can be plotted: Well, we may use \textit{Dimensionality Reduction Techniques} like \textit{UMAP} and \textit{t-SNE} etc.}
+\end{itemize}
+
+The result is not just a list of scores, but a map of the chatbot’s conversational behavior. This helps developers and clinicians understand how the chatbot thinks across time, not just how it performs on isolated questions.
+
+We’re not only measuring if the chatbot answers correctly—we’re studying how it moves through states of behavior. This opens the door to identifying failure patterns early, refining personas, and ensuring the chatbot remains safe and empathetic over sustained interactions.
+
+\section{Primary Technology-Stack(High-Level Design)}
+\begin{enumerate}
+    \item \textbf{LLM API:} Since we don't have a real chatbot under evaluation right now so we are getting it done by a simple \textit{Gemini-1.5-Pro} API call.
+    \item \textbf{Langgraph:} For smart routing within a graph-based workflow, we exploited the functionality of \textit{Langgraph}.
+    \item \textbf{PostgreSQL:} Stores all the information regarding prompts, responses, evaluations, and routings using the \textit{psycopg2} framework.
+    \item \textbf{Evaluation:} 
+    \begin{enumerate}
+        \item \textbf{Rule-based checks:} \textit{Python}, \textit{regex}, toxicity classifier. These are methods to include credibility through heuristic-based methods.
+        \item \textbf{LLM-as-judge:} scoring model where a LLM is asked to give a score on a particular rubric(e.g. safety, empathy etc.) for a particular response in context to the user query. This brings ease to the judging process with a tradeoff in credibility.
+    \end{enumerate}
+    \item \textbf{Orchestration:} Python modules for ingestion, evaluation, routing.
+    \item \textbf{Data Sources:} \hyperlink{https://huggingface.co/datasets/ShenLab/MentalChat16K}{MentalChat16K by PennShenLab}
+\end{enumerate}
+\end{multicols}{2}
+\end{document}
+

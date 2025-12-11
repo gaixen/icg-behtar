@@ -114,6 +114,11 @@ taskkill /PID <PID> /F
 python fastapi_server.py
 ```
 
+## Running `EVAL.py` from the root directory
+
+```python
+python EVAL.py --input Evaluation-Methods/chats.json --rubric Evaluation-Methods/rubrics.json --no-firecrawl --fast --output evaluation_output.json --details-file evaluation_details.json
+``` 
 ### Frontend Can't Reach Backend
 - Make sure FastAPI server is running (`http://localhost:8000/health` should return `{"status": "ok"}`)
 - Check CORS settings in `fastapi_server.py` (currently allows all origins)

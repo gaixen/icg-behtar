@@ -19,7 +19,7 @@ from .gateway import (
 )
 
 __all__ = [
-    'BaseDetectorase', 
+    'BaseDetector', 
     'Extra', 
     'ExtrasImport', 
     'PromptInjectionAnalyzer', 
@@ -31,6 +31,5 @@ __all__ = [
     'PII_Analyzer', 
     'SecretsAnalyzer', 
     'UnicodeDetector',
-    'SecretPattern',
-    'BaseDetector'
+    'SecretPattern'
 ]
